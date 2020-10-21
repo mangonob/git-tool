@@ -1,5 +1,5 @@
 *.gem
 *.swp
-/docs/
+/doc/
 /.vscode/
 .DS_Store

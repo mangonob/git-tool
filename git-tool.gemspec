@@ -15,6 +15,5 @@ Gem::Specification.new do |spec|
   spec.description = ""
   spec.executables = [
     "git-doc", 
-    "git-tool",
   ]
 end
