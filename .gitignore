@@ -1,0 +1,4 @@
+*.gem
+*.swp
+/docs/
+.DS_Store
