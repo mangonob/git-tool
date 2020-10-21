@@ -2,4 +2,6 @@
 
 require_relative 'lib/git-tool'
 
-puts "Hello ruby"
+repo = GitTool::Repository.new
+object = GitTool::GitObject.parse('head')
+puts object
