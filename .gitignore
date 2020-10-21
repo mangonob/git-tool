@@ -1,4 +1,5 @@
 *.gem
 *.swp
 /docs/
+/.vscode/
 .DS_Store
