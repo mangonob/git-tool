@@ -1,5 +1,41 @@
 #!/usr/bin/env ruby
 
-require_relative 'lib/git-tool'
+require_relative '../lib/git-tool'
+require 'optparse'
 
-puts "Git doc"
+Option = Struct.new(
+  :since, 
+  :until,
+  :author,
+  :all_author,
+  :version,
+  :branch,
+)
+
+options = Option.new
+
+opt_parser = OptionParser.new do |opts|
+  opts.banner = "Usage: git doc [options]"
+  opts.separator("\n")
+
+  opts.on("--author=<pattern>", "--committer=<pattern>", "Filter commit use author (default use [user.name] git config).")
+  opts.on("-b", "--branch=<branch_name>", "Branch to generate change log, default use current branch.")
+  opts.on("--since=<date>", "--after=<date>", "Show commits more recent than a specific date.")
+  opts.on("--until=<date>", "--before=<date>", "Show commits older than a specific date.")
+  opts.on("-a", "--all_author", "Commit of all author.")
+  opts.on("-v", "--version", "Show version of git-doc.")
+  opts.on("-h", "--help", "Print this help.") do
+    puts opts
+    exit
+  end
+end
+
+opt_parser.parse!(into: options)
+# puts options
+
+if options[:version] then
+  puts GitTool::Version
+else
+  repo = GitTool::Repository.new
+  puts repo.current_branch.rev_list("--no-merges").map &:conventional
+end

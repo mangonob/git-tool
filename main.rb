@@ -2,6 +2,4 @@
 
 require_relative 'lib/git-tool'
 
-repo = GitTool::Repository.new
-object = GitTool::GitObject.parse('head')
-puts object
+load File.absolute_path(File.join(__FILE__, "../bin/git-doc"))
