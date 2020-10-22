@@ -8,26 +8,30 @@ module GitTool
     end
 
     def conventional
-      first_line = message.lines[0]
-      throw "bad commit message" unless first_line
-      conventional_pattern = /([a-z]*)(\((.*)\))?(!?): (.*)/i
-      matched = first_line.match(conventional_pattern)
+      ## Strip each line, and remove empty lines
+      pretty_message = self.message.lines.map(&:strip).reject(&:empty?).join("\n")
+      choice_type_pattern = ConventionalType.constants.map(&:to_s).join("|")
+      conventional_pattern = /^(#{choice_type_pattern})(\((.*)\))?(!?): ?(.*)/im
+      matched = pretty_message.match(conventional_pattern)
 
       begin
+        raise "bad matched" unless matched
+
         type = matched[1]
         submodule = matched[3]
         breaking_change = matched[4]
-        message = matched[5]
-        throw "bad conventional type" unless ConventionalType.constants.index type.upcase.to_sym
+        message = matched[5].lines.map(&:strip).join("\n")
+
+        raise "bad conventional type" unless ConventionalType.constants.index type.upcase.to_sym
         conventional_type = ConventionalType.new type
         return Conventional.new(
+          message && !message.empty? && message || nil,
           type: conventional_type, 
-          message: message && !message.empty? && message || nil,
           submodule: submodule && !submodule.empty? && submodule || nil,
           breaking_change: breaking_change && !breaking_change.empty? || false,
         )
-      rescue => error
-        return Conventional.new type: ConventionalType::FEAT, message: first_line
+      rescue RuntimeError => error
+        return Conventional.new pretty_message
       end
     end
   end

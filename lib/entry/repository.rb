@@ -7,7 +7,7 @@ module GitTool
     attr_accessor :config
 
     def initialize # :nodoc:
-      throw ".git/ not found" unless File.exist?(".git")
+      raise ".git/ not found" unless File.exist?(".git")
 
       self.config = {}
 

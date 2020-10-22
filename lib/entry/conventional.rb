@@ -34,15 +34,19 @@ end
 class Conventional
   attr_accessor :type, :message, :submodule, :breaking_change
 
-  def initialize(type: , message:, submodule: , breaking_change: false)
-    self.type = type
+  def initialize(message, type: nil, submodule: nil, breaking_change: false)
     self.message = message
+    self.type = type
     self.submodule = submodule 
     self.breaking_change = breaking_change
   end
 
   def to_s
-    return "#{type.raw_value.downcase}#{self.submodule && "(#{self.submodule})"}" +
-    "#{"!" if self.breaking_change}: " + self.message
+    if type then
+      return "#{type.raw_value.downcase}#{self.submodule && "(#{self.submodule})"}" +
+        "#{"!" if self.breaking_change}: #{self.message}"
+    else
+      return "!! #{self.message}"
+    end
   end
 end

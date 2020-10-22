@@ -20,7 +20,7 @@ module GitTool
     end
 
     def contains?(other)
-      throw "missing sha1 id" unless this.sha1 && other.sha1
+      raise "missing sha1 id" unless this.sha1 && other.sha1
       not `git rev-list #{self.sha1} | grep #{other.sha1}`.lines.empty?
     end
 
