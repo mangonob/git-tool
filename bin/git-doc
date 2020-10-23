@@ -1,15 +1,18 @@
 #!/usr/bin/env ruby
 
-require_relative '../lib/git-tool'
 require 'optparse'
+require_relative '../lib/git-tool'
+require_relative '../lib/entry/git-range'
+require_relative '../lib/markdown'
 
 Option = Struct.new(
   :since, 
   :until,
   :author,
-  :all_author,
   :version,
   :branch,
+  :today,
+  :all
 )
 
 options = Option.new
@@ -22,7 +25,8 @@ opt_parser = OptionParser.new do |opts|
   opts.on("-b", "--branch=<branch_name>", "Branch to generate change log, default use current branch.")
   opts.on("--since=<date>", "--after=<date>", "Show commits more recent than a specific date.")
   opts.on("--until=<date>", "--before=<date>", "Show commits older than a specific date.")
-  opts.on("-a", "--all_author", "Commit of all author.")
+  opts.on("--today", "Show commits since midnight.")
+  opts.on("-a", "--all", "Commit of all author.")
   opts.on("-v", "--version", "Show version of git-doc.")
   opts.on("-h", "--help", "Print this help.") do
     puts opts
@@ -31,11 +35,53 @@ opt_parser = OptionParser.new do |opts|
 end
 
 opt_parser.parse!(into: options)
-# puts options
 
-if options[:version] then
+if options[:version]
   puts GitTool::Version
 else
   repo = GitTool::Repository.new
-  puts repo.current_branch.rev_list("--no-merges").map &:conventional
+
+  rev_options = {
+    :author => options[:all] ? nil : (options[:author] || repo.user_name),
+    :since => options[:since],
+    :until => options[:until],
+    :branch => options[:branch],
+  }.compact
+
+  branch = repo.current_branch
+  root = branch.root
+
+  GitRange = GitTool::GitRange
+
+  grouped_tags = repo.tags.group_by(&:sha1)
+
+  ranges = [branch.root.sha1, *grouped_tags.keys].reduce [[], nil] do |curr, value|
+    acc, prev = curr
+    if prev
+      [acc.concat([GitRange.new(prev.to_commit, value.to_commit)]), value]
+    else
+      [acc, value]
+    end
+  end.first
+
+  range_and_tags = ranges.zip(grouped_tags.values).reverse
+
+  least_tag = grouped_tags.values.last&.first
+
+  if least_tag
+    first_range = GitRange.new(least_tag, branch)
+    rev_list = first_range.rev_list("--no-merges", **rev_options)
+    if not rev_list.empty?
+      MD::h3 branch.name
+      MD::rules
+      puts rev_list.map(&:conventional)
+    end
+  else
+    rev_list = branch.rev_list("--no-merges", **rev_options)
+    if not rev_list.empty?
+      MD::h3 branch.name
+      MD::rules
+      puts rev_list.map(&:conventional)
+    end
+  end
 end

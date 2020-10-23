@@ -1,5 +1,6 @@
 require_relative 'branch'
 require_relative 'commit'
+require_relative 'tag'
 
 module GitTool
   class Repository
